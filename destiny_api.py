@@ -1,6 +1,8 @@
 from requests_oauthlib import OAuth2Session
 from datetime import datetime
 from dotenv import load_dotenv
+import pickle
+import sqlite3
 import json
 import os
 
@@ -36,7 +38,7 @@ data = json.loads(response.text)
 
 membership_id = data['Response']['profiles'][0]['membershipId']
 membership_type = data['Response']['profiles'][0]['membershipType']
-print(f"{membership_id} \n {membership_type}")
+#print(f"{membership_id} \n {membership_type}")
 
 character_url = f"https://www.bungie.net/Platform/Destiny2/{membership_type}/Profile/{membership_id}/?components=200"
 response = session.get(url=character_url, headers=header)
@@ -49,14 +51,27 @@ for characters in data['Response']['characters']['data']:
         character_id = characters
     if data['Response']['characters']['data'][characters]['classHash']==3655393761 and which_character=='titan':
         character_id = characters
-print(character_id)
+#print(character_id)
 
-"""""
-if(data['Response']['vendors']['data']['2190858386']['enabled']):
-    print("Xur is available today")
-else:
-    print("Xur will be available at {['Response']['vendor']['data']['2190858386']['nextRefreshData']")
 
-for items in data['Response']['sales']['data']['2190858386']['saleItems']:
-    print(f"{data['Response']['sales']['data']['2190858386']['saleItems'][items]['itemHash']}")
-"""""
+xur_url = f"https://www.bungie.net/Platform/Destiny2/{membership_type}/Profile/{membership_id}/Character/{character_id}/Vendors/2190858386/?components=304,305,402"
+manifest_url = "https://www.bungie.net/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/"
+
+response = session.get(url=xur_url, headers=header)
+xur_data = json.loads(response.text)
+
+for item in xur_data['Response']['sales']['data']:
+    if item != '0' and item != '567':
+        item_hash = xur_data['Response']['sales']['data'][item]['itemHash']
+
+        response = session.get(url=f'{manifest_url}{item_hash}/', headers=header)
+        item_data = json.loads(response.text)
+
+        item_name = item_data['Response']['displayProperties']['name']
+        print(item_name)
+
+
+#print(f'{manifest_url}{item_hash}/')
+
+#get name
+
