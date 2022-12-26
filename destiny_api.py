@@ -13,7 +13,6 @@ client_secret = os.getenv('CLIENT_SECRET')
 redirect_url = "https://www.google.com"    
 auth_url = "https://www.bungie.net/en/OAuth/Authorize"
 token_url = "https://www.bungie.net/platform/app/oauth/token/"
-user_url = "https://www.bungie.net/Platform/User/GetMembershipsForCurrentUser/"
 
 session = OAuth2Session(client_id=client_id, redirect_uri=redirect_url)
 
@@ -30,14 +29,27 @@ token = session.fetch_token(
 header = { 
     'X-API-Key': api_key 
 }
-print(token)
-#print(f"Access token: {token['access_token']} \n Refresh token: {token['refresh_token']}")
-response = session.get(url=user_url, headers=header)
+
+profile_url = "https://www.bungie.net/Platform/Destiny2/-1/Profile/" + f"{token['membership_id']}" + "/LinkedProfiles/"
+response = session.get(url=profile_url, headers=header)
 data = json.loads(response.text)
 
-membership_id = data['Response']['destinyMemberships'][0]['membershipId']
-membership_type = data['Response']['destinyMemberships'][0]['membershipType']
+membership_id = data['Response']['profiles'][0]['membershipId']
+membership_type = data['Response']['profiles'][0]['membershipType']
+print(f"{membership_id} \n {membership_type}")
 
+character_url = f"https://www.bungie.net/Platform/Destiny2/{membership_type}/Profile/{membership_id}/?components=200"
+response = session.get(url=character_url, headers=header)
+data = json.loads(response.text)
+which_character = input("Which character would you like to view Xur's inventory on?: ")
+for characters in data['Response']['characters']['data']:
+    if data['Response']['characters']['data'][characters]['classHash']==671679327 and which_character=='hunter':
+        character_id = characters
+    if data['Response']['characters']['data'][characters]['classHash']==2271682572 and which_character=='warlock':
+        character_id = characters
+    if data['Response']['characters']['data'][characters]['classHash']==3655393761 and which_character=='titan':
+        character_id = characters
+print(character_id)
 
 """""
 if(data['Response']['vendors']['data']['2190858386']['enabled']):
